@@ -138,7 +138,7 @@ elif target == '8_result':
     # remove noise from sample7
     
     img = cv2.imread(args.input)
-    ori_img = cv2.imread(args.input)
+    ori_img = cv2.imread('./hw1_sample_images/sample5.jpg')
     img2 = util.Padding(img)
 
     for i in range(img2.shape[0]-2):
@@ -151,7 +151,7 @@ elif target == '9_result':
     # remove noise from sample8
     
     img = cv2.imread(args.input)
-    ori_img = cv2.imread(args.input)
+    ori_img = cv2.imread('./hw1_sample_images/sample5.jpg')
     img2 = util.Padding(img)
     
    
