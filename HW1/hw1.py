@@ -82,18 +82,17 @@ elif target == '6_result':
     img = cv2.imread(args.input)
     img = util.to_gray(img) 
 
-    matrix_edge_size = 7
+    matrix_edge_size = 31
 
     img2 = util.Padding(img, (matrix_edge_size-1)/2)
     
     for i in range(img.shape[0]):
         for j in range(img.shape[1]):
-            img[i][j][0] = util.Local_EQ(i+1, j+1, img2, b = matrix_edge_size, color = 0)
+            img[i][j][0] = util.Local_EQ(i+(matrix_edge_size-1)//2, j+(matrix_edge_size-1)//2, img2, b = matrix_edge_size, color = 0)
     
     
     #cv2.imwrite(args.output, img)
     cv2.imwrite(f'./result/6_result_{matrix_edge_size}x{matrix_edge_size}.jpg', img)
-
     util.histogram_draw(img, target)
     
 elif target == '7_result':
@@ -102,11 +101,7 @@ elif target == '7_result':
     img = cv2.imread(args.input)
     img2 = util.to_gray(img)
     img2 = img2//1
-    #histo = []
     
-    #for i in range(img.shape[0]):
-    #    for j in range(img.shape[1]):
-    #        histo.append(img[i][j][0])
     histo_np = img2[:][:].ravel()
     hist = np.zeros(256)
     
@@ -115,8 +110,6 @@ elif target == '7_result':
     
     #Create trans func 
     CDF = np.zeros(256)
-    #for i in range(256):
-    #    CDF[i] = CDF[i-1] + hist[i]
     
     CDF = hist.cumsum()
 

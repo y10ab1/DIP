@@ -107,7 +107,8 @@ def Local_EQ(Ci, Cj, img, b = 3, color = 0):
         for j in range(b):
             hist.append(img[Ci+i-offset][Cj+j-offset][color])
             if img[Ci+i-offset][Cj+j-offset][color] > img[Ci][Cj][color]:
-                rank += 1
+                continue    
+            rank += 1
     max_intensity = max(hist)
     return (max_intensity * rank) // (b**2)
 
