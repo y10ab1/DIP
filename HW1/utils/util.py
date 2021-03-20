@@ -13,6 +13,7 @@ def process_command():
 # Compute noe channel image (gray)
 def to_gray(img):
     img_gray = np.zeros((img.shape[0], img.shape[1], 1), np.uint8)
+    
     for i in range(img.shape[0]):
         for j in range(img.shape[1]):
             img_gray[i][j][0] = (img[i][j][0]*299 +img[i][j][1]*587+img[i][j][2]*114 +500)/1000
@@ -36,8 +37,9 @@ def power_law_filter(img, gamma = 0.65):
     gamma_corrected = np.array(255*(img / 255) ** gamma, np.uint8) 
     return gamma_corrected
 
-def log_filter(img, c = 1):
-    c = 255/(np.log(1 + np.max(img))) 
+def log_filter(img, c = 0):
+    if c == 0:
+        c = 255/(np.log(1 + np.max(img))) 
     new_img = np.array(c*(np.log10(img+1.1)), np.uint8)
     return new_img
 
@@ -51,6 +53,7 @@ def Reverse_img(img):
     for i in range(img2.shape[1]):
         img2[:,i,:] = img[:,img2.shape[1]-1-i,:]
     return img2
+
 # Compute PSNR
 def PSNR(imgI, imgK):
     imgI = to_gray(imgI)    
@@ -75,15 +78,6 @@ def Noise_Mask(Ci, Cj, img, b = 2):
     Masked_val = Masked_val // ((b+2)**2)
     return Masked_val 
 
-def Noise_Mask_2(Ci, Cj, img, b = 2):
-    Masked_val = 0
-    
-    mask = np.array([[1, b, 1], [b, b**2, b], [1, b, 1]])
-    for i in range(3):
-        for j in range(3):
-            Masked_val += mask[i][j] * img[Ci+i-1][Cj+j-1][0]
-    Masked_val = Masked_val // ((b+2)**2)
-    return Masked_val 
 
 def Noise_Mask_med(Ci, Cj, img, b = 2):
     Masked_val = 0

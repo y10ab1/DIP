@@ -63,7 +63,7 @@ elif target == '6_result':
     img = cv2.imread(args.input)
     img = util.to_gray(img) 
     
-    matrix_edge_size = 3
+    matrix_edge_size = 31
     
     #img2 = util.Padding(img, (matrix_edge_size-1)/2)
     img = util.LHE(img, matrix_edge_size)
@@ -78,13 +78,16 @@ elif target == '7_result':
 
     img = cv2.imread(args.input)
     img2 = util.to_gray(img)
-
-    #img2 = util.log_filter(img2, c=80)
+    c=100
+    img2 = util.log_filter(img2, c)
+    cv2.imwrite(f'./result/7_result_log_trans_c={c}.jpg', img2)
+    #img2 = util.Reverse_log_filter(img2) 
+    '''
     gamma=0.85
     img2 = util.power_law_filter(img2, gamma)
-    #img2 = util.Reverse_log_filter(img2) 
     cv2.imwrite(f'./result/7_result_gamma={gamma}.jpg', img2)
     cv2.imwrite(args.output, img2)
+    '''
     util.histogram_draw(img2, target)
     
 
