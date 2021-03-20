@@ -28,10 +28,7 @@ if target == '1_result':
 
 elif target == '2_result':
     img = cv2.imread(args.input)
-    img2 = np.zeros(img.shape, np.uint8)
-    for i in range(img2.shape[1]):
-        img2[:,i,:] = img[:,img2.shape[1]-1-i,:]
-
+    img2 = util.Reverse_img(img)
     cv2.imwrite(args.output, img2)
 
 elif target == '3_result':
@@ -54,24 +51,8 @@ elif target == '5_result':
     img = cv2.imread(args.input)
     img2 = util.to_gray(img)
 
-    histo_np = img2[:][:].ravel()
-    hist = np.zeros(256)
-    
-    for i in histo_np:
-        hist[i] += 1
-    
-    #Create trans func 
-    CDF = np.zeros(256)
-    CDF = hist.cumsum()
+    img2 = util.GHE(img2)
 
-    trans_f = np.zeros(256)
-    for i in range(256):
-        trans_f[i] = round((CDF[i] - CDF.min())*255/(CDF.max() - CDF.min()))
-
-    #Map the img and plothistogram2
-    for i in range(img2.shape[0]):
-        for j in range(img2.shape[1]):
-            img2[i][j][0] = trans_f[img2[i][j][0]]
     cv2.imwrite(args.output, img2)
     util.histogram_draw(img2, target)
 
@@ -81,18 +62,15 @@ elif target == '6_result':
 
     img = cv2.imread(args.input)
     img = util.to_gray(img) 
-
-    matrix_edge_size = 31
-
-    img2 = util.Padding(img, (matrix_edge_size-1)/2)
     
-    for i in range(img.shape[0]):
-        for j in range(img.shape[1]):
-            img[i][j][0] = util.Local_EQ(i+(matrix_edge_size-1)//2, j+(matrix_edge_size-1)//2, img2, b = matrix_edge_size, color = 0)
+    matrix_edge_size = 3
     
+    #img2 = util.Padding(img, (matrix_edge_size-1)/2)
+    img = util.LHE(img, matrix_edge_size)
     
     #cv2.imwrite(args.output, img)
     cv2.imwrite(f'./result/6_result_{matrix_edge_size}x{matrix_edge_size}.jpg', img)
+    cv2.imwrite(args.output, img)
     util.histogram_draw(img, target)
     
 elif target == '7_result':
@@ -100,29 +78,12 @@ elif target == '7_result':
 
     img = cv2.imread(args.input)
     img2 = util.to_gray(img)
-    img2 = img2//1
-    
-    histo_np = img2[:][:].ravel()
-    hist = np.zeros(256)
-    
-    for i in histo_np:
-        hist[i] += 1
-    
-    #Create trans func 
-    CDF = np.zeros(256)
-    
-    CDF = hist.cumsum()
 
-    trans_f = np.zeros(256)
-    for i in range(256):
-        trans_f[i] = round((CDF[i] - CDF.min())*255/(CDF.max() - CDF.min()))
-
-    #Map the img and plothistogram2
-    for i in range(img2.shape[0]):
-        for j in range(img2.shape[1]):
-            img2[i][j][0] = trans_f[img2[i][j][0]]
-    
-
+    #img2 = util.log_filter(img2, c=80)
+    gamma=0.85
+    img2 = util.power_law_filter(img2, gamma)
+    #img2 = util.Reverse_log_filter(img2) 
+    cv2.imwrite(f'./result/7_result_gamma={gamma}.jpg', img2)
     cv2.imwrite(args.output, img2)
     util.histogram_draw(img2, target)
     
@@ -136,7 +97,8 @@ elif target == '8_result':
 
     for i in range(img2.shape[0]-2):
         for j in range(img2.shape[1]-2):
-            img[i][j] = util.Noise_Mask(i+1, j+1, img2, b = 3)
+            img[i][j] = util.Noise_Mask(i+1, j+1, img2, b = 2.35)
+    
     print("PSNR =", util.PSNR(ori_img, img))
     cv2.imwrite(args.output, img)
 

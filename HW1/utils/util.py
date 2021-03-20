@@ -3,12 +3,14 @@ import numpy as np
 import argparse
 from matplotlib import pyplot as plt 
 
+# Add some argument
 def process_command():
     parser = argparse.ArgumentParser()
     parser.add_argument('--input', '-i', required=True, help='input path')
     parser.add_argument('--output', '-o', required=True, help='output path')
     return parser.parse_args()
 
+# Compute noe channel image (gray)
 def to_gray(img):
     img_gray = np.zeros((img.shape[0], img.shape[1], 1), np.uint8)
     for i in range(img.shape[0]):
@@ -16,7 +18,7 @@ def to_gray(img):
             img_gray[i][j][0] = (img[i][j][0]*299 +img[i][j][1]*587+img[i][j][2]*114 +500)/1000
     return img_gray
 
-#generate histogram
+# Generate histogram
 def histogram_draw(img, name):
     histo = []
     
@@ -30,7 +32,26 @@ def histogram_draw(img, name):
     plt.savefig(f'./result/{name}_histogram.jpg')
     plt.close()
 
+def power_law_filter(img, gamma = 0.65):
+    gamma_corrected = np.array(255*(img / 255) ** gamma, np.uint8) 
+    return gamma_corrected
 
+def log_filter(img, c = 1):
+    c = 255/(np.log(1 + np.max(img))) 
+    new_img = np.array(c*(np.log10(img+1.1)), np.uint8)
+    return new_img
+
+def Reverse_log_filter(img, c = 1):
+    c = 255/(np.log(1 + np.max(img))) 
+    new_img = np.array(c*(np.log10(1/(img+1.1))), np.uint8)
+    return new_img
+
+def Reverse_img(img):
+    img2 = np.zeros(img.shape, np.uint8)
+    for i in range(img2.shape[1]):
+        img2[:,i,:] = img[:,img2.shape[1]-1-i,:]
+    return img2
+# Compute PSNR
 def PSNR(imgI, imgK):
     imgI = to_gray(imgI)    
     imgK = to_gray(imgK)    
@@ -43,6 +64,7 @@ def PSNR(imgI, imgK):
     psnr = 20*(np.log10((255)/(MSE)**(1/2)))
     return psnr
 
+# Denoise
 def Noise_Mask(Ci, Cj, img, b = 2):
     Masked_val = 0
     
@@ -53,6 +75,15 @@ def Noise_Mask(Ci, Cj, img, b = 2):
     Masked_val = Masked_val // ((b+2)**2)
     return Masked_val 
 
+def Noise_Mask_2(Ci, Cj, img, b = 2):
+    Masked_val = 0
+    
+    mask = np.array([[1, b, 1], [b, b**2, b], [1, b, 1]])
+    for i in range(3):
+        for j in range(3):
+            Masked_val += mask[i][j] * img[Ci+i-1][Cj+j-1][0]
+    Masked_val = Masked_val // ((b+2)**2)
+    return Masked_val 
 
 def Noise_Mask_med(Ci, Cj, img, b = 2):
     Masked_val = 0
@@ -112,4 +143,41 @@ def Local_EQ(Ci, Cj, img, b = 3, color = 0):
     max_intensity = max(hist)
     return (max_intensity * rank) // (b**2)
 
+def GHE(img2):
+    img2 = img2//1
+    
+    histo_np = img2[:][:].ravel()
+    hist = np.zeros(256)
+    
+    for i in histo_np:
+        hist[i] += 1
+    
+    #Create trans func 
+    CDF = np.zeros(256)
+    
+    CDF = hist.cumsum()
 
+    trans_f = np.zeros(256)
+    for i in range(256):
+        trans_f[i] = round((CDF[i] - CDF.min())*255/(CDF.max() - CDF.min()))
+
+    #Map the img and plothistogram2
+    for i in range(img2.shape[0]):
+        for j in range(img2.shape[1]):
+            img2[i][j][0] = trans_f[img2[i][j][0]]
+    return img2
+
+def LHE(img, matrix_edge_size = 13):
+
+    img2 = Padding(img, (matrix_edge_size-1)/2)
+    img = np.zeros((400,560,1), np.uint8)
+    for i in range(img.shape[0]):
+        for j in range(img.shape[1]):
+            img2[i+(matrix_edge_size-1)//2][j+(matrix_edge_size-1)//2][0] \
+                    = Local_EQ(i+(matrix_edge_size-1)//2, j+(matrix_edge_size-1)//2, img2, b = matrix_edge_size, color = 0)
+    
+    for i in range(img.shape[0]):
+        for j in range(img.shape[1]):
+            img[i,j,0] = img2[i+(matrix_edge_size-1)//2][j+(matrix_edge_size-1)//2][0]
+
+    return img
