@@ -25,7 +25,7 @@ def histogram_draw(img, name):
     
     for i in range(img.shape[0]):
         for j in range(img.shape[1]):
-            histo.append(img[i][j][0])
+            histo.append(img[i][j])
     histo_np = np.array(histo)
     
     plt.hist(histo_np, bins = range(256)) 
@@ -84,7 +84,7 @@ def Noise_Mask_med(Ci, Cj, img, b = 2):
     Med = []
     for i in range(3):
         for j in range(3):
-            Med.append(img[Ci+i-1][Cj+j-1][0])
+            Med.append(img[Ci+i-1][Cj+j-1])
     MAXMIN = max(min(Med[:3]), min(Med[1:4]), min(Med[2:5]),min(Med[3:6]), min(Med[4:7]), min(Med[5:8]),min(Med[6:9]))
     MINMAX = min(max(Med[:3]), max(Med[1:4]), max(Med[2:5]),max(Med[3:6]), max(Med[4:7]), max(Med[5:8]),max(Med[6:9]))
     #print((MAXMIN+MINMAX)/2)
@@ -122,6 +122,15 @@ def Padding(img, pad_num = 1):
         return img2
     else :
         return Padding(img2, pad_num = pad_num-1)
+
+def DEnoise(img):
+    img2 = cv2.copyMakeBorder(img, 1, 1, 1, 1, cv2.BORDER_REPLICATE)
+    new_img = np.zeros((img2.shape[0]-2,img2.shape[1]-2))
+    for i in range(img2.shape[0]-2):
+        for j in range(img2.shape[1]-2):
+            new_img[i,j] = Noise_Mask_med(i+1, j+1, img2, b = 1)
+    print(new_img)
+    return new_img
 
 def Local_EQ(Ci, Cj, img, b = 3, color = 0):
     max_intensity = 0
